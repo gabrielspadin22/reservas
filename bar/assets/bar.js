@@ -23,7 +23,6 @@ onValue(reservasDB, function(snapshot) {
     } catch (error) {
         console.log(error)
     }
-    
 });
 
 
@@ -32,9 +31,9 @@ function mostrar() {
         const box = document.createElement("div");
         box.innerHTML = `<div class="border bg-success text-center m-2 py-2 px-1 fs-5">
                             <div>Hab ${reservas[index].hab}</div>
-                            <div>PAXs ${reservas[index].cantidad}</div>
-                            <div>Celiacos ${reservas[index].celiaco}</div>
-                            <div>Veganos ${reservas[index].vegano}</div>
+                            <div>${reservas[index].cantidad} pax</div>
+                            <div>Celiacos: ${reservas[index].celiaco}</div>
+                            <div>Veganos: ${reservas[index].vegano}</div>
                         </div>`;
         mapa.appendChild(box);
         console.log(reservas[index].cantidad)

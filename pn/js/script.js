@@ -5,10 +5,11 @@ document.getElementById('8hs').addEventListener('click', ()=>{fijar_horario(8)})
 document.getElementById('9hs').addEventListener('click', ()=>{fijar_horario(9)});
 document.getElementById('10hs').addEventListener('click', ()=>{fijar_horario(10)});
 
+
 document.getElementById("personas").addEventListener("change", function() {
     let v = parseInt(this.value);
     if (v < 1) this.value = 1;
-    if (v > 50) this.value = 20;
+    if (v > 50) this.value = 6;
 });
 
 let btnC = document.getElementById("celiaco");
