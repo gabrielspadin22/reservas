@@ -16,9 +16,14 @@ const reservasDB = ref(database, "reservas_confirmadas")
 
 // GET
 onValue(reservasDB, function(snapshot) {
-    reservas = Object.values(snapshot.val());
-    console.log(reservas);
-    mostrar();
+    try {
+        reservas = Object.values(snapshot.val());
+        console.log(reservas);
+        mostrar();
+    } catch (error) {
+        console.log(error)
+    }
+    
 });
 
 

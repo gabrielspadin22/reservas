@@ -16,20 +16,30 @@ let btnV = document.getElementById("vegano");
 let horario;
 let celiaco = false;
 let vegano = false;
-let reservas;
+let hab;
+let reservas = [];
+let nueva_reserva;
 
-function reserva(cantidad, celiaco, vegano, horario) {
+// Obtencion de url ----------------------------------------------------------------------
+const paramURL = window.location.search;
+
+const parametrosURL = new URLSearchParams(paramURL);
+
+hab = parametrosURL.get('hab');
+
+function reserva(cantidad, celiaco, vegano, horario, hab) {
     this.cantidad = cantidad;
     this.celiaco = celiaco;
     this.vegano = vegano;
     this.horario = horario;
+    this.hab = hab;
 };
 
 function fijar_horario(hora) {
     horario = hora;
 };
 
-// FIREBASE
+// FIREBASE -----------------------------------------------------------------------------
 const appSettings = {
     databaseURL: "https://reservas-pn-default-rtdb.firebaseio.com/"
 };
@@ -39,29 +49,59 @@ const reservasDB = ref(database, "reservas_confirmadas")
 
 // GET
 onValue(reservasDB, function(snapshot) {
-    reservas = Object.values(snapshot.val());
-    console.log(reservas);
+    try {
+        reservas = Object.values(snapshot.val());
+        console.log(reservas);
+    } catch (error) {}
 });
-
+console.log(reservas)
 // PUSH
 document.getElementById("ok").addEventListener('click', () =>{
-    let cantidad = document.getElementById("personas").value; 
-    if (cantidad === 0 || cantidad === null || horario == undefined) {
-        alert("Favor ingrese la cantidad de personas y el horario");
-    } else {
-        if (btnC.checked) {
-            celiaco = true;
-        }else{
-            celiaco = false;
-        };
-        
-        if (btnV.checked) {
-            vegano = true
-        }else{
-            vegano = false;
-        };
-        let nueva_reserva = new reserva(cantidad, celiaco, vegano, horario);
-        reservas.push(nueva_reserva);
-        push(reservasDB, nueva_reserva)
+    send();
+/*    
+    console.log(reservas)
+    if (reservas == undefined) {
+        send();
+        console.log(reservas)
+    }else{
+        reservas.filter(function(habitacion){
+            if (habitacion.hab !== hab) {
+                send();
+                console.log('se envio')
+            }else{
+                let res = prompt(`La ${habitacion.hab} ya existe, desea modificarla?`);
+                if (res == 1) {
+                    console.log('no se modifica y no se envia')
+                }else{
+                    send();
+                    console.log('se modifico y envio')
+                }
+            }
+        });        
     }
+*/
 });
+
+
+function send() {
+    let cantidad = document.getElementById("personas").value; 
+        if (cantidad === 0 || cantidad === null || horario == undefined) {
+            alert("Favor ingrese la cantidad de personas y el horario");
+        } else {
+            if (btnC.checked) {
+                celiaco = true;
+            }else{
+                celiaco = false;
+            };
+                
+            if (btnV.checked) {
+                vegano = true
+            }else{
+                vegano = false;
+            };
+            nueva_reserva = new reserva(cantidad, celiaco, vegano, horario, hab);
+            push(reservasDB, nueva_reserva);
+            reservas.push(nueva_reserva);
+            console.log(reservas)
+        }
+}
