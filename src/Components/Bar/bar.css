@@ -1,0 +1,15 @@
+#tablero {
+    width: 100%;
+    height: 80vh;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+}
+.item {
+    width: max-content;
+    height: max-content;
+    margin: 5px;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+}
