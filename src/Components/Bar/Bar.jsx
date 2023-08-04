@@ -1,9 +1,8 @@
 import React from 'react';
 import './bar.css';
-import { doc, getDocs, collection, onSnapshot } from 'firebase/firestore';
+import { onSnapshot } from 'firebase/firestore';
 import { useEffect, useState } from "react";
-import { db } from '../../config/firebase';
-
+import { reservasCollectionRef, configCollectionRef } from '../../config/firebase';
 
 function Bar() {
 
@@ -11,9 +10,6 @@ function Bar() {
     const [cuposDisponibles, setCuposDisponibles] = useState(['']);
 
     useEffect(() => {
-
-        const reservasCollectionRef = collection(db, 'reservas');
-        const configCollectionRef = collection(db, 'config');
 
         const reservas = onSnapshot(reservasCollectionRef, (snapshot) => {
             const itemsArray = snapshot.docs.map((doc) => ({
@@ -31,11 +27,7 @@ function Bar() {
             setCuposDisponibles(configInfo);
         });
 
-
-        const actualizar = configCollectionRef.doc('cupos').update({cupos:6666});
-
         return () => {
-            actualizar()
             reservas();
             cupos();
         };

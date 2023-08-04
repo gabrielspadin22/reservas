@@ -1,7 +1,7 @@
-import { initializeApp, firebase } from "firebase/app";
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection } from 'firebase/firestore';
 
-const firebaseConfig = {
+export const firebaseConfig = {
     apiKey: "AIzaSyB130nvJI3TIntwiKBdqo1rMNhtFROQ_zw",
     authDomain: "reservas-pn.firebaseapp.com",
     databaseURL: "https://reservas-pn-default-rtdb.firebaseio.com",
@@ -12,5 +12,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const reservasCollectionRef = collection(db, 'reservas');
+export const configCollectionRef = collection(db, 'config');
