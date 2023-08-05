@@ -27,7 +27,6 @@ useEffect(()=>{
             ...doc.data(),
         }));
         setCuposDisponibles(configInfo);
-        //console.log()
     });
 
     return () => {
@@ -56,7 +55,7 @@ const handleSubmit = (e) => {
     const batch = writeBatch(db);
     const sfRef = doc(db, "config", time);
     const found = cuposDisponibles.find((element) => element.id === time );
-    console.log(found)
+    console.log(found.cupos)
     batch.update(sfRef, {cupos: found.cupos - pax});
     await batch.commit();
     
