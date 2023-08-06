@@ -1,24 +1,25 @@
 import React from 'react';
 import './bar.css';
-import { onSnapshot } from 'firebase/firestore';
+import { onSnapshot} from 'firebase/firestore';
 import { useEffect, useState } from "react";
 import { reservasCollectionRef, configCollectionRef } from '../../config/firebase';
 
-function Bar() {
 
+
+
+
+
+
+function Bar() {
     const [listaReservas, setListaReservas] = useState([]);
     const [cuposDisponibles, setCuposDisponibles] = useState(['']);
-    const [time, setTime] = useState();
-    const [found, setFound] = useState();
+    const [time, setTime] = useState(8);
     const select = document.getElementById("horarioBar");
 
     function guardarHorario() {
-        
         const horarioSeleccionado = select.value;
         console.log("Horario seleccionado:", horarioSeleccionado);
-        setTime(horarioSeleccionado);
-        
-        
+        setTime(parseInt(horarioSeleccionado));        
     };
 
 
@@ -28,7 +29,8 @@ function Bar() {
                 id: doc.id,
                 ...doc.data(),
             }));
-            setListaReservas(itemsArray);
+            const result = itemsArray.filter((item) => item.time === time);
+            setListaReservas(result);
         });
 
         const cupos = onSnapshot(configCollectionRef, (snapshot) => {
@@ -36,8 +38,7 @@ function Bar() {
                 id: doc.id,
                 ...doc.data(),
             }));
-            setCuposDisponibles(configInfo.find((element) => element.id === time ));
-            console.log(cuposDisponibles)
+            setCuposDisponibles(configInfo.find(({ id }) => id === time).cupos);
         });
 
         return () => {
@@ -46,23 +47,17 @@ function Bar() {
         };
     }, [time, select]);
 
-
-    
-
-    
     return (
         <div id="tablero" className='bg-dark gap-2'>
             <div>
-            <label htmlFor="horarioBar">Selecciona un horario:</label>
-            <select id="horarioBar" onChange={(e) => guardarHorario()}>
-                <option value={0}>Seleccione horario</option>
-                <option value={8}>8hs</option>
-                <option value={9}>9hs</option>
-                <option value={10}>10hs</option>
-            </select>
-                <button onClick={()=>{guardarHorario()}} id='horario'>8HS</button>
+                <label htmlFor="horarioBar">Selecciona un horario:</label>
+                <select id="horarioBar"  onChange={(e) => guardarHorario()}>
+                    <option value={8}>8hs</option>
+                    <option value={9}>9hs</option>
+                    <option value={10}>10hs</option>
+                </select>
             </div>
-            {cuposDisponibles ? <div className='fs-3 text-light'>Cupos disponibles: {found}</div> : ''}
+            <div className='fs-3 text-light'>Cupos disponibles: {cuposDisponibles}</div>
             {listaReservas ? listaReservas.map(reserva => 
             <div key={reserva.id} className='border bg-success p-1 m-1'>
                 <div>Habitacion Nº {reserva.hab}</div>
