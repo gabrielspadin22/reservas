@@ -1,8 +1,8 @@
 body {
   box-sizing: border-box;
-    margin: 0;
-    font-weight: lighter;
-    font-family: 'Courier New', Courier, monospace;
+  margin: 0;
+  font-weight: lighter;
+  font-family: 'Courier New', Courier, monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
