@@ -9,7 +9,6 @@ function Bar() {
     const [cuposDisponibles, setCuposDisponibles] = useState(['']);
     const [time, setTime] = useState(8);
     const select = document.getElementById("horarioBar");
-    let nuevosCupos;
     function guardarHorario() {
         const horarioSeleccionado = select.value;
         console.log("Horario seleccionado:", horarioSeleccionado);
@@ -54,18 +53,19 @@ function Bar() {
             cupos()
             reservas();
         };
-    }, [time, select, nuevosCupos]);
+    }, [time, select]);
 
     async function actualizarCupos() {
         try {
+            let cuposInput = document.getElementById('modificarCupos').value;
+            console.log(cuposInput);
             const batch = writeBatch(db);
             const sfRef = doc(db, "config", time.toString());
-            batch.update(sfRef, {cupos: nuevosCupos});
+            batch.update(sfRef, {cupos: cuposInput});
             await batch.commit();
         } catch (error) {
             alert(error)
         }
-        
     }
 
 
@@ -89,9 +89,9 @@ function Bar() {
                     <div className=''>Cupos disponibles: {cuposDisponibles}</div>
                 </div>
                 <div>
-                    <label htmlFor="modificarCupos" className='fs-5'>Modificar cupos:</label>
-                    <input type="number" max={2} id="modificarCupos" onChange={(e) => nuevosCupos = e.target.value} /><br /><br />
-                    <button type='button' onClick={()=>{actualizarCupos(); nuevosCupos = 0}}>Confirmar</button>
+                    <label htmlFor="modificarCupos" className='fs-5'>Actualizar cupos:</label>
+                    <input type="number" max={2} id="modificarCupos" required /><br /><br />
+                    <button type='button' onClick={()=>{actualizarCupos()}}>Confirmar</button>
                 </div>
                 <div>Añadir horario</div>
             </div>
@@ -105,7 +105,7 @@ function Bar() {
                     <div>Veganos: {reserva.veg} </div>
                 </div>) 
                 : 
-                <div className='text-light mx-auto fs-1'>No hay resevas creadas</div>}
+                <div className='text-light mx-auto fs-1'>No hay resevas creadas en este horario</div>}
             </div>
         </div>
     );

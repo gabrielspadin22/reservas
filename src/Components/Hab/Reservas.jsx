@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {  collection, addDoc, doc, writeBatch, onSnapshot } from 'firebase/firestore';
-import { configCollectionRef, db } from '../../config/firebase';
+import {  collection, addDoc, doc, writeBatch, onSnapshot, deleteDoc } from 'firebase/firestore';
+import { configCollectionRef, db, reservasCollectionRef } from '../../config/firebase';
 import Swal from 'sweetalert2'
 import logo from "../../Img/logo.png";
 import bg from "../../Img/bg.jpg";
@@ -15,10 +15,24 @@ const Formulario = () => {
     const [time, setHorarioAsistencia] = useState(0);
     const [cuposDisponibles, setCuposDisponibles] = useState('');
     const [cuposTotalesDisponibles, setCuposTotalesDisponibles] = useState();
+    const [tof, setToF] = useState(false);
+    const [reservaExistente, setReservaExistente] = useState([]);
     let found;
     let t = document.getElementById('8hs');
 
     useEffect(()=>{
+        const reservas = onSnapshot(reservasCollectionRef, (snapshot) => {
+            const itemsArray = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            const result = itemsArray.filter((item) => item.hab === num);
+            setReservaExistente(result);
+            result[0] ? setToF(true) : console.log("La reserva no existe");
+            console.log(tof);
+            console.log(result);
+        });
+
         const cupos = onSnapshot(configCollectionRef, (snapshot) => {
             const configInfo = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -28,26 +42,84 @@ const Formulario = () => {
             setCuposDisponibles(configInfo);
         });
         return () => {
+            reservas();
             cupos();
         };
     },[time, t]);
 
+    async function actualizarReserva() {
+        try {
+            const batch = writeBatch(db);
+            const sfRef = doc(db, "reservas", reservaExistente[0].id);
+            const ssfRef = doc(db, "config", time.toString());
+            pax > reservaExistente[0].pax ? batch.update(ssfRef, {cupos: parseInt(found.cupos) - parseInt(pax)}) : batch.update(ssfRef, {cupos: parseInt(found.cupos) + parseInt(pax)});
+            batch.update(sfRef, {
+                hab: num,
+                pax: pax,
+                cel: cel,
+                veg: veg,
+                time: time});
+            await batch.commit();
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    async function eliminarReserva() {
+        try {
+            Swal.fire('Reserva cancelada', '')
+            await deleteDoc(doc(db, "reservas", reservaExistente[0].id));
+        } catch (error) {
+            Swal.fire('Error', 'Favor contactarse con recepcion', 'error')
+        }
+    }
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        found = cuposDisponibles.find(({ id }) => id === parseInt(time));
-        if (found) {
-            parseInt(pax) > found.cupos || found.cupos === 0 ? 
+
+        if (tof) {
+            alert("la reserva existe, desea continuar?")
+            setToF(false);
+            console.log(tof);
             Swal.fire({
-                title: '¡UPS! No quedan disponibles',
-                text: 'Por favor seleccione otro horario',
-                icon: 'error',
-                confirmButtonText: 'Ok'
-            }) 
-            :
-            crearObjetoEnFirestore(num, pax, cel, veg, time);
+                title: 'La reserva ya existe',
+                text: 'Desea continuar?',
+                showDenyButton: true,
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                confirmButtonText: 'Guardar reserva',
+                denyButtonText: `Eliminar reserva`,
+            }).then((result) => {
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    found = cuposDisponibles.find(({ id }) => id === parseInt(time));
+                    actualizarReserva();
+                    Swal.fire('Reserva guardada!', '', 'success')
+                } else if (result.isDenied) {
+                    eliminarReserva()
+                }
+            })
         }else{
-            console.log("Comuniquese con recepcion");
-        };
+            alert("la reserva no existe");
+            found = cuposDisponibles.find(({ id }) => id === parseInt(time));
+            if (found) {
+                parseInt(pax) > found.cupos || found.cupos === 0 ? 
+                    Swal.fire({
+                        title: '¡UPS! No quedan disponibles',
+                        text: 'Por favor seleccione otro horario',
+                        icon: 'error',
+                        confirmButtonText: 'Ok'
+                    }) 
+                    :
+                    crearObjetoEnFirestore(num, pax, cel, veg, time);
+            }else{
+                    console.log("Comuniquese con recepcion");
+                };
+        }
+
+
+
+        
     };
     async function crearObjetoEnFirestore(hab, pax, cel, veg, time) {
         try {
