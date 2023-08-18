@@ -30,16 +30,13 @@ const Formulario = () => {
                 ...doc.data(),
             }));
             const result = itemsArray.filter((item) => item.hab === num);
-            setReservaExistente(result);
+            setReservaExistente(result);          
             if (result[0]) {
                 setToF(true);
                 setOldTime(result[0].time);
             } else {
                 console.log("La reserva no existe");
             }
-            console.log(tof);
-            console.log(OldTime);
-            console.log(time);
         });
 
         const cupos = onSnapshot(configCollectionRef, (snapshot) => {
@@ -59,13 +56,27 @@ const Formulario = () => {
 
     async function actualizarReserva() {
         try {
+            let resto = parseInt(pax) - parseInt(reservaExistente[0].pax);
             const sfRef = doc(db, "reservas", reservaExistente[0].id);
-            if (time != OldTime) {
-                console.log('se cambio el horario');
+            if (time !== OldTime) {
                 const actualizarTime = doc(db, "config", OldTime.toString());
-                batch.update(actualizarTime, {cupos: parseInt(found.cupos) + parseInt(pax)})
+                found = cuposDisponibles.find(({ id }) => id === parseInt(OldTime));
+                batch.update(actualizarTime, {cupos: parseInt(found.cupos) + parseInt(reservaExistente[0].pax)});
+                if (pax === reservaExistente[0].pax) {
+                    found = cuposDisponibles.find(({ id }) => id === parseInt(time));
+                    console.log(found)
+                    batch.update(ssfRef, {cupos: parseInt(found.cupos) - parseInt(reservaExistente[0].pax)});
+                };
             };
-            pax > reservaExistente[0].pax ? batch.update(ssfRef, {cupos: parseInt(found.cupos) - parseInt(pax)}) : batch.update(ssfRef, {cupos: parseInt(found.cupos) + parseInt(pax)});
+            if (pax !== reservaExistente[0].pax) {
+                found = cuposDisponibles.find(({ id }) => id === parseInt(time));
+                if (pax > reservaExistente[0].pax) {
+                    batch.update(ssfRef, {cupos: parseInt(found.cupos) - resto});
+                } if (pax < reservaExistente[0].pax) {
+                    batch.update(ssfRef, {cupos: parseInt(found.cupos) + parseInt(pax)});
+                };
+            };
+            
             batch.update(sfRef, {
                 hab: num,
                 pax: pax,
@@ -74,7 +85,8 @@ const Formulario = () => {
                 time: time});
             await batch.commit();
         } catch (error) {
-            console.log(error)
+            console.log(error);
+            Swal.fire('Error', 'Favor contactarse con recepcion', 'error');
         }
     }
 
@@ -83,8 +95,6 @@ const Formulario = () => {
             Swal.fire('Reserva cancelada', '');
             setToF(false);
             found = cuposDisponibles.find(({ id }) => id === parseInt(time));
-            console.log(found);
-            console.log(found.cupos);
             batch.update(ssfRef, {cupos: parseInt(found.cupos) + parseInt(pax)});
             await deleteDoc(doc(db, "reservas", reservaExistente[0].id));
             await batch.commit();
@@ -98,10 +108,7 @@ const Formulario = () => {
         e.preventDefault();
 
         if (tof) {
-            alert("la reserva existe, desea continuar?");
-            
             setToF(false);
-            console.log(tof);
             Swal.fire({
                 title: 'La reserva ya existe',
                 text: 'Desea continuar?',
@@ -121,7 +128,6 @@ const Formulario = () => {
                 }
             })
         }else{
-            alert("la reserva no existe");
             found = cuposDisponibles.find(({ id }) => id === parseInt(time));
             if (found) {
                 parseInt(pax) > found.cupos || found.cupos === 0 ? 
@@ -135,6 +141,7 @@ const Formulario = () => {
                     crearObjetoEnFirestore(num, pax, cel, veg, time);
             }else{
                     console.log("Comuniquese con recepcion");
+                    Swal.fire('Error', 'Favor contactarse con recepcion', 'error');
                 };
         }
 
@@ -152,8 +159,6 @@ const Formulario = () => {
                 time: time
             };
             await addDoc(collection(db, 'reservas'), objeto);
-            console.log(time)
-            console.log(found.cupos)
             const sfRef = doc(db, "config", time.toString());
             batch.update(sfRef, {cupos: found.cupos - pax});
             await batch.commit();
