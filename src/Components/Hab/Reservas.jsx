@@ -13,12 +13,15 @@ const Formulario = () => {
     const [cel, setNumeroCeliacos] = useState('');
     const [veg, setNumeroVeganos] = useState('');
     const [time, setHorarioAsistencia] = useState(0);
+    const [OldTime, setOldTime] = useState('');
     const [cuposDisponibles, setCuposDisponibles] = useState('');
     const [cuposTotalesDisponibles, setCuposTotalesDisponibles] = useState();
     const [tof, setToF] = useState(false);
     const [reservaExistente, setReservaExistente] = useState([]);
+    const ssfRef = doc(db, "config", time.toString());
     let found;
     let t = document.getElementById('8hs');
+    const batch = writeBatch(db);
 
     useEffect(()=>{
         const reservas = onSnapshot(reservasCollectionRef, (snapshot) => {
@@ -28,9 +31,15 @@ const Formulario = () => {
             }));
             const result = itemsArray.filter((item) => item.hab === num);
             setReservaExistente(result);
-            result[0] ? setToF(true) : console.log("La reserva no existe");
+            if (result[0]) {
+                setToF(true);
+                setOldTime(result[0].time);
+            } else {
+                console.log("La reserva no existe");
+            }
             console.log(tof);
-            console.log(result);
+            console.log(OldTime);
+            console.log(time);
         });
 
         const cupos = onSnapshot(configCollectionRef, (snapshot) => {
@@ -42,16 +51,20 @@ const Formulario = () => {
             setCuposDisponibles(configInfo);
         });
         return () => {
+            setOldTime(time);
             reservas();
             cupos();
         };
-    },[time, t]);
+    },[time, t, tof]);
 
     async function actualizarReserva() {
         try {
-            const batch = writeBatch(db);
             const sfRef = doc(db, "reservas", reservaExistente[0].id);
-            const ssfRef = doc(db, "config", time.toString());
+            if (time != OldTime) {
+                console.log('se cambio el horario');
+                const actualizarTime = doc(db, "config", OldTime.toString());
+                batch.update(actualizarTime, {cupos: parseInt(found.cupos) + parseInt(pax)})
+            };
             pax > reservaExistente[0].pax ? batch.update(ssfRef, {cupos: parseInt(found.cupos) - parseInt(pax)}) : batch.update(ssfRef, {cupos: parseInt(found.cupos) + parseInt(pax)});
             batch.update(sfRef, {
                 hab: num,
@@ -67,10 +80,17 @@ const Formulario = () => {
 
     async function eliminarReserva() {
         try {
-            Swal.fire('Reserva cancelada', '')
+            Swal.fire('Reserva cancelada', '');
+            setToF(false);
+            found = cuposDisponibles.find(({ id }) => id === parseInt(time));
+            console.log(found);
+            console.log(found.cupos);
+            batch.update(ssfRef, {cupos: parseInt(found.cupos) + parseInt(pax)});
             await deleteDoc(doc(db, "reservas", reservaExistente[0].id));
+            await batch.commit();
         } catch (error) {
-            Swal.fire('Error', 'Favor contactarse con recepcion', 'error')
+            Swal.fire('Error', 'Favor contactarse con recepcion', 'error');
+            console.log(error)
         }
     }
 
@@ -78,7 +98,8 @@ const Formulario = () => {
         e.preventDefault();
 
         if (tof) {
-            alert("la reserva existe, desea continuar?")
+            alert("la reserva existe, desea continuar?");
+            
             setToF(false);
             console.log(tof);
             Swal.fire({
@@ -131,7 +152,6 @@ const Formulario = () => {
                 time: time
             };
             await addDoc(collection(db, 'reservas'), objeto);
-            const batch = writeBatch(db);
             console.log(time)
             console.log(found.cupos)
             const sfRef = doc(db, "config", time.toString());
@@ -165,7 +185,7 @@ return (
             <input className='px-1' type="number" id="numeroCeliacos" value={cel} min={0} max={pax == 0 ? 6 : pax} onChange={(e) => setNumeroCeliacos(e.target.value)} required /><br /><br />
             <label htmlFor="numeroVeganos" className='fs-5'>Cantidad de Veganos:</label>
             <input className='px-1' type="number" id="numeroVeganos" value={veg} min={0} max={pax == 0 ? 6 : pax} onChange={(e) => setNumeroVeganos(e.target.value)} required /><br /><br />
-            <label htmlFor="horario">Selecciona un horario:</label>
+            <label htmlFor="horario">Seleccione un horario:</label>
             <div className='d-flex gap-2 my-5'>
                 <button type='button' id='8hs' className='ms-auto border btn btn-light btn-outline-warning text-dark' value={8} onClick={()=>{setHorarioAsistencia(8)}}>
                     <p className='fs-3'>8Hs</p>
