@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 function App() {
   return (
-    <div className="App ">
+    <div className="App bg-secondary bg-opacity-25">
       
       <BrowserRouter>
         <Routes>

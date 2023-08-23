@@ -3,7 +3,6 @@ import {  collection, addDoc, doc, writeBatch, onSnapshot, deleteDoc } from 'fir
 import { configCollectionRef, db, reservasCollectionRef } from '../../config/firebase';
 import Swal from 'sweetalert2'
 import logo from "../../Img/logo.png";
-import bg from "../../Img/bg.jpg";
 import './Reservas.css';
 import { useParams } from 'react-router';
 
@@ -34,11 +33,8 @@ const Formulario = () => {
             if (result[0]) {
                 setToF(true);
                 setOldTime(result[0].time);
-            } else {
-                console.log("La reserva no existe");
-            }
+            };
         });
-
         const cupos = onSnapshot(configCollectionRef, (snapshot) => {
             const configInfo = snapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -53,7 +49,6 @@ const Formulario = () => {
             cupos();
         };
     },[time, t, tof]);
-
     async function actualizarReserva() {
         try {
             let resto = parseInt(pax) - parseInt(reservaExistente[0].pax);
@@ -64,7 +59,6 @@ const Formulario = () => {
                 batch.update(actualizarTime, {cupos: parseInt(found.cupos) + parseInt(reservaExistente[0].pax)});
                 if (pax === reservaExistente[0].pax) {
                     found = cuposDisponibles.find(({ id }) => id === parseInt(time));
-                    console.log(found)
                     batch.update(ssfRef, {cupos: parseInt(found.cupos) - parseInt(reservaExistente[0].pax)});
                 };
             };
@@ -75,8 +69,7 @@ const Formulario = () => {
                 } if (pax < reservaExistente[0].pax) {
                     batch.update(ssfRef, {cupos: parseInt(found.cupos) + parseInt(pax)});
                 };
-            };
-            
+            };            
             batch.update(sfRef, {
                 hab: num,
                 pax: pax,
@@ -88,8 +81,7 @@ const Formulario = () => {
             console.log(error);
             Swal.fire('Error', 'Favor contactarse con recepcion', 'error');
         }
-    }
-
+    };
     async function eliminarReserva() {
         try {
             Swal.fire('Reserva cancelada', '');
@@ -102,23 +94,21 @@ const Formulario = () => {
             Swal.fire('Error', 'Favor contactarse con recepcion', 'error');
             console.log(error)
         }
-    }
-
+    };
     const handleSubmit = (e) => {
         e.preventDefault();
-
         if (tof) {
             setToF(false);
             Swal.fire({
                 title: 'La reserva ya existe',
                 text: 'Desea continuar?',
+                html: `Horario reservado: ${OldTime}hs, Cantidad de personas: ${reservaExistente[0].pax}`,
                 showDenyButton: true,
                 showCancelButton: true,
                 cancelButtonText: 'Cancelar',
-                confirmButtonText: 'Guardar reserva',
+                confirmButtonText: 'Actualizar reserva',
                 denyButtonText: `Eliminar reserva`,
             }).then((result) => {
-                /* Read more about isConfirmed, isDenied below */
                 if (result.isConfirmed) {
                     found = cuposDisponibles.find(({ id }) => id === parseInt(time));
                     actualizarReserva();
@@ -144,10 +134,6 @@ const Formulario = () => {
                     Swal.fire('Error', 'Favor contactarse con recepcion', 'error');
                 };
         }
-
-
-
-        
     };
     async function crearObjetoEnFirestore(hab, pax, cel, veg, time) {
         try {
@@ -164,6 +150,8 @@ const Formulario = () => {
             await batch.commit();
             Swal.fire({
                 title: 'Reserva creada con exito',
+                html:
+    '<ul><li>Por favor respete el horario seleccionado</li><li>Recuerde que <b>no</b> esta permitido retirarse del restaurant con <b>vajilla</b></li></ul>',
                 icon: 'success',
                 confirmButtonText: 'Ok'
             })
@@ -179,35 +167,35 @@ const Formulario = () => {
     };
 
 return (
-    <div className='d-flex flex-column bg-secondary bg-opacity-50 h-100 '>
-        <img id='bg' src={bg} alt="background" />
-        <form onSubmit={handleSubmit} className='my-auto'>
-            <h1 className='my-5'>Reserva de desayuno</h1>
-            <h2 className='my-5'>Habitacion Nº {num}</h2>
-            <label htmlFor="numeroPersonas" className='fs-5'>Cantidad de Personas:</label>
+    <div className='d-flex flex-column  '>
+        <div className="background-image"></div>
+        <form onSubmit={handleSubmit} className=''>
+            <h1 className='my-4'>Reserva de desayuno</h1>
+            <h3 className='my-1 text-decoration-underline'>Habitacion Nº {num}</h3>
+            <label htmlFor="numeroPersonas" className='mt-3 '>Cantidad de Personas:</label>
             <input className='px-1' type="number" id="numeroPersonas" value={pax} min={1} max={6} onChange={(e) => setNumeroPersonas(e.target.value)} required /><br /><br />
-            <label htmlFor="numeroCeliacos" className='fs-5'>Cantidad de Celiacos:</label>
+            <label htmlFor="numeroCeliacos" className=''>Cantidad de Celiacos:</label>
             <input className='px-1' type="number" id="numeroCeliacos" value={cel} min={0} max={pax == 0 ? 6 : pax} onChange={(e) => setNumeroCeliacos(e.target.value)} required /><br /><br />
-            <label htmlFor="numeroVeganos" className='fs-5'>Cantidad de Veganos:</label>
+            <label htmlFor="numeroVeganos" className=''>Cantidad de Veganos:</label>
             <input className='px-1' type="number" id="numeroVeganos" value={veg} min={0} max={pax == 0 ? 6 : pax} onChange={(e) => setNumeroVeganos(e.target.value)} required /><br /><br />
             <label htmlFor="horario">Seleccione un horario:</label>
-            <div className='d-flex gap-2 my-5'>
-                <button type='button' id='8hs' className='ms-auto border btn btn-light btn-outline-warning text-dark' value={8} onClick={()=>{setHorarioAsistencia(8)}}>
-                    <p className='fs-3'>8Hs</p>
+            <div className=' my-1'>
+                <button type='button' id='8hs' className='shadow  ms-auto my-1 border btn btn-light btn-outline-warning text-dark' value={8} onClick={()=>{setHorarioAsistencia(8)}}>
+                    <p className=''>8Hs</p>
                     <small>({cuposTotalesDisponibles?cuposTotalesDisponibles[1].cupos : ""} Cupos disponibles)</small>
                 </button>
-                <button type="button" className='border btn btn-light btn-outline-warning text-dark' value={9} onClick={()=>{setHorarioAsistencia(9)}}>
-                    <p className='fs-3'>9Hs</p>
+                <button type="button" className='shadow  m-1 border btn btn-light btn-outline-warning text-dark' value={9} onClick={()=>{setHorarioAsistencia(9)}}>
+                    <p className=''>9Hs</p>
                 <small>({cuposTotalesDisponibles?cuposTotalesDisponibles[2].cupos : ""} Cupos disponibles)</small>
                 </button>
-                <button type="button" className='me-auto border btn btn-light btn-outline-warning text-dark' value={10} onClick={()=>{setHorarioAsistencia(10)}}>
-                    <p className='fs-3'>10Hs</p>
+                <button type="button" className='shadow  me-auto my-1 border btn btn-light btn-outline-warning text-dark' value={10} onClick={()=>{setHorarioAsistencia(10)}}>
+                    <p className=''>10Hs</p>
                     <small>({cuposTotalesDisponibles?cuposTotalesDisponibles[0].cupos : ""} Cupos disponibles)</small>
                 </button>
             </div>
-            <input className='btn btn-light btn-outline-success rounded fs-4' type="submit" value="Reservar"/>
+            <input className='my-4 shadow btn btn-light btn-outline-success rounded fs-4' type="submit" value="Reservar"/>
         </form>
-        <div className='mx-auto mt-5'>
+        <div className='mx-auto '>
             <img  width={"150px"} id='logo' src={logo} alt="Logo_Pueblo_Nativo" />
         </div>
     </div>

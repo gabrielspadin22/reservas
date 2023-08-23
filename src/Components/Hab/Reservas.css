@@ -1,8 +1,11 @@
-#bg{
-    left: 0vw;
-    position: absolute;
-    z-index: -1;
+
+.background-image {
     filter: blur(8px);
-    width: 100vw;
-    height: 100vh;
+    z-index: -1;
+    position: absolute;
+    background-image: url('../../Img/bg.jpg');
+    background-size: cover;
+    background-position: center;
+    width: 100%;
+    height: 100%;
 }

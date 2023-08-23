@@ -14,9 +14,41 @@ function Bar() {
         console.log("Horario seleccionado:", horarioSeleccionado);
         setTime(parseInt(horarioSeleccionado));        
     };
-    
     let f = new Date();
-
+/*
+    async function deleteCollection(db, collectionPath, batchSize) {
+        const collectionRef = db.collection(collectionPath);
+        const query = collectionRef.orderBy('id').limit(batchSize);
+      
+        return new Promise((resolve, reject) => {
+          deleteQueryBatch(db, query, resolve).catch(reject);
+        });
+      }
+      
+      async function deleteQueryBatch(db, query, resolve) {
+        const snapshot = await query.get();
+      
+        const batchSize = snapshot.size;
+        if (batchSize === 0) {
+          // When there are no documents left, we are done
+          resolve();
+          return;
+        }
+      
+        // Delete documents in a batch
+        const batch = db.batch();
+        snapshot.docs.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+      
+        // Recurse on the next process tick, to avoid
+        // exploding the stack.
+        process.nextTick(() => {
+          deleteQueryBatch(db, query, resolve);
+        });
+      }
+*/
     function mostrarHora() {
         let fecha = new Date();
         let horas = fecha.getHours();
@@ -93,7 +125,7 @@ function Bar() {
                     <input type="number" max={2} id="modificarCupos" required /><br /><br />
                     <button type='button' onClick={()=>{actualizarCupos()}}>Confirmar</button>
                 </div>
-                <div>Añadir horario</div>
+                <button type="button">Vaciar reservas</button>
             </div>
             <div id="tablero" className='bg-dark gap-2'>
                 {listaReservas ? listaReservas.map(reserva => 
